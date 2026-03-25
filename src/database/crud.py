@@ -788,6 +788,9 @@ def create_newapi_service(
     api_key: str,
     enabled: bool = True,
     priority: int = 0,
+    channel_type: int = 57,
+    channel_base_url: str = "",
+    channel_models: str = "gpt-5.4,gpt-5,gpt-5-codex,gpt-5-codex-mini,gpt-5.1,gpt-5.1-codex,gpt-5.1-codex-max,gpt-5.1-codex-mini,gpt-5.2,gpt-5.2-codex,gpt-5.3-codex,gpt-5-openai-compact,gpt-5-codex-openai-compact,gpt-5-codex-mini-openai-compact,gpt-5.1-openai-compact,gpt-5.1-codex-openai-compact,gpt-5.1-codex-max-openai-compact,gpt-5.1-codex-mini-openai-compact,gpt-5.2-openai-compact,gpt-5.2-codex-openai-compact,gpt-5.3-codex-openai-compact",
 ) -> NewapiService:
     svc = NewapiService(
         name=name,
@@ -795,6 +798,9 @@ def create_newapi_service(
         api_key=api_key,
         enabled=enabled,
         priority=priority,
+        channel_type=channel_type,
+        channel_base_url=channel_base_url,
+        channel_models=channel_models,
     )
     db.add(svc)
     db.commit()

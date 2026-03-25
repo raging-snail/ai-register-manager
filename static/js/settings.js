@@ -1246,19 +1246,22 @@ async function loadNewapiServices() {
         const services = await api.get('/newapi-services');
         renderNewapiServicesTable(services);
     } catch (e) {
-        elements.newapiServicesTable.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--danger-color);">${e.message}</td></tr>`;
+        elements.newapiServicesTable.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--danger-color);">${e.message}</td></tr>`;
     }
 }
 
 function renderNewapiServicesTable(services) {
     if (!services || services.length === 0) {
-        elements.newapiServicesTable.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">暂无 NEWAPI 服务，点击「添加服务」新增</td></tr>';
+        elements.newapiServicesTable.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:20px;">暂无 NEWAPI 服务，点击「添加服务」新增</td></tr>';
         return;
     }
     elements.newapiServicesTable.innerHTML = services.map(s => `
         <tr>
             <td>${escapeHtml(s.name)}</td>
             <td style="font-size:0.85rem;color:var(--text-muted);">${escapeHtml(s.api_url)}</td>
+            <td style="text-align:center;">${s.channel_type || 57}</td>
+            <td style="font-size:0.85rem;color:var(--text-muted);">${escapeHtml(s.channel_base_url || '')}</td>
+            <td style="font-size:0.8rem;color:var(--text-muted);max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(s.channel_models || '')}">${escapeHtml(s.channel_models || '')}</td>
             <td style="text-align:center;" title="${s.enabled ? '已启用' : '已禁用'}">${s.enabled ? '✅' : '⭕'}</td>
             <td style="text-align:center;">${s.priority}</td>
             <td style="white-space:nowrap;">
@@ -1270,10 +1273,14 @@ function renderNewapiServicesTable(services) {
 }
 
 function openNewapiServiceModal(service = null) {
+    const defaultModels = 'gpt-5.4,gpt-5,gpt-5-codex,gpt-5-codex-mini,gpt-5.1,gpt-5.1-codex,gpt-5.1-codex-max,gpt-5.1-codex-mini,gpt-5.2,gpt-5.2-codex,gpt-5.3-codex,gpt-5-openai-compact,gpt-5-codex-openai-compact,gpt-5-codex-mini-openai-compact,gpt-5.1-openai-compact,gpt-5.1-codex-openai-compact,gpt-5.1-codex-max-openai-compact,gpt-5.1-codex-mini-openai-compact,gpt-5.2-openai-compact,gpt-5.2-codex-openai-compact,gpt-5.3-codex-openai-compact';
     document.getElementById('newapi-service-id').value = service ? service.id : '';
     document.getElementById('newapi-service-name').value = service ? service.name : '';
     document.getElementById('newapi-service-url').value = service ? service.api_url : '';
     document.getElementById('newapi-service-key').value = '';
+    document.getElementById('newapi-service-channel-type').value = service ? (service.channel_type || 57) : 57;
+    document.getElementById('newapi-service-channel-base-url').value = service ? (service.channel_base_url || '') : '';
+    document.getElementById('newapi-service-channel-models').value = service ? (service.channel_models || defaultModels) : defaultModels;
     document.getElementById('newapi-service-priority').value = service ? service.priority : 0;
     document.getElementById('newapi-service-enabled').checked = service ? service.enabled : true;
     if (service) {
@@ -1304,6 +1311,9 @@ async function handleSaveNewapiService(e) {
     const name = document.getElementById('newapi-service-name').value.trim();
     const apiUrl = document.getElementById('newapi-service-url').value.trim();
     const apiKey = document.getElementById('newapi-service-key').value.trim();
+    const channelType = parseInt(document.getElementById('newapi-service-channel-type').value) || 57;
+    const channelBaseUrl = document.getElementById('newapi-service-channel-base-url').value.trim();
+    const channelModels = document.getElementById('newapi-service-channel-models').value.trim();
     const priority = parseInt(document.getElementById('newapi-service-priority').value) || 0;
     const enabled = document.getElementById('newapi-service-enabled').checked;
 
@@ -1317,7 +1327,15 @@ async function handleSaveNewapiService(e) {
     }
 
     try {
-        const payload = { name, api_url: apiUrl, priority, enabled };
+        const payload = {
+            name,
+            api_url: apiUrl,
+            priority,
+            enabled,
+            channel_type: channelType,
+            channel_base_url: channelBaseUrl,
+            channel_models: channelModels,
+        };
         if (apiKey) payload.api_key = apiKey;
 
         if (id) {

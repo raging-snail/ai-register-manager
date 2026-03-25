@@ -114,6 +114,9 @@ class DatabaseSessionManager:
             ("accounts", "token_sync_updated_at", "DATETIME"),
             ("accounts", "newapi_uploaded", "BOOLEAN DEFAULT 0"),
             ("accounts", "newapi_uploaded_at", "DATETIME"),
+            ("newapi_services", "channel_type", "INTEGER DEFAULT 57"),
+            ("newapi_services", "channel_base_url", "VARCHAR(500) DEFAULT ''"),
+            ("newapi_services", "channel_models", "TEXT"),
             ("proxies", "is_default", "BOOLEAN DEFAULT 0"),
             ("cpa_services", "include_proxy_url", "BOOLEAN DEFAULT 0"),
         ]

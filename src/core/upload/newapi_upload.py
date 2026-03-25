@@ -5,7 +5,7 @@ NEWAPI 上传功能 — 通过 PUT /api/channel/ 添加渠道
 import json
 import logging
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from curl_cffi import requests as cffi_requests
 
@@ -14,9 +14,9 @@ from ...database.session import get_db
 
 logger = logging.getLogger(__name__)
 
-NEWAPI_TYPE_OPENAI = 57
-DEFAULT_BASE_URL = ""
-DEFAULT_MODELS = "gpt-5.4,gpt-5,gpt-5-codex,gpt-5-codex-mini,gpt-5.1,gpt-5.1-codex,gpt-5.1-codex-max,gpt-5.1-codex-mini,gpt-5.2,gpt-5.2-codex,gpt-5.3-codex,gpt-5-openai-compact,gpt-5-codex-openai-compact,gpt-5-codex-mini-openai-compact,gpt-5.1-openai-compact,gpt-5.1-codex-openai-compact,gpt-5.1-codex-max-openai-compact,gpt-5.1-codex-mini-openai-compact,gpt-5.2-openai-compact,gpt-5.2-codex-openai-compact,gpt-5.3-codex-openai-compact"
+DEFAULT_CHANNEL_TYPE = 1
+DEFAULT_CHANNEL_BASE_URL = ""
+DEFAULT_CHANNEL_MODELS = "gpt-5.4,gpt-5,gpt-5-codex,gpt-5-codex-mini,gpt-5.1,gpt-5.1-codex,gpt-5.1-codex-max,gpt-5.1-codex-mini,gpt-5.2,gpt-5.2-codex,gpt-5.3-codex,gpt-5-openai-compact,gpt-5-codex-openai-compact,gpt-5-codex-mini-openai-compact,gpt-5.1-openai-compact,gpt-5.1-codex-openai-compact,gpt-5.1-codex-max-openai-compact,gpt-5.1-codex-mini-openai-compact,gpt-5.2-openai-compact,gpt-5.2-codex-openai-compact,gpt-5.3-codex-openai-compact"
 
 
 def _normalize_base(api_url: str) -> str:
@@ -46,6 +46,9 @@ def upload_to_newapi(
     account: Account,
     api_url: str,
     api_key: str,
+    channel_type: Optional[int] = None,
+    channel_base_url: Optional[str] = None,
+    channel_models: Optional[str] = None,
 ) -> Tuple[bool, str]:
     base = _normalize_base(api_url)
     if not base:
@@ -55,15 +58,19 @@ def upload_to_newapi(
     if not account.access_token:
         return False, "账号缺少 access_token"
 
+    resolved_channel_type = channel_type if isinstance(channel_type, int) and channel_type > 0 else DEFAULT_CHANNEL_TYPE
+    resolved_channel_base_url = (channel_base_url or DEFAULT_CHANNEL_BASE_URL).strip()
+    resolved_channel_models = (channel_models or DEFAULT_CHANNEL_MODELS).strip() or DEFAULT_CHANNEL_MODELS
+
     url = f"{base}/api/channel/"
     account_name = account.email or ""
     channel = {
         "auto_ban": 1,
         "name": account.email or "",
-        "type": NEWAPI_TYPE_OPENAI,
+        "type": resolved_channel_type,
         "key": json.dumps({"access_token": account.access_token or "", "account_id": account_name}, ensure_ascii=False),
-        "base_url": DEFAULT_BASE_URL,
-        "models": DEFAULT_MODELS,
+        "base_url": resolved_channel_base_url,
+        "models": resolved_channel_models,
         "multi_key_mode": "random",
         "group": "default",
         "groups": ["default"],
@@ -92,6 +99,9 @@ def batch_upload_to_newapi(
     account_ids: List[int],
     api_url: str,
     api_key: str,
+    channel_type: Optional[int] = None,
+    channel_base_url: Optional[str] = None,
+    channel_models: Optional[str] = None,
 ) -> dict:
     results = {
         "success_count": 0,
@@ -112,7 +122,14 @@ def batch_upload_to_newapi(
                 results["details"].append({"id": account_id, "email": account.email, "success": False, "error": "缺少 Token"})
                 continue
 
-            success, message = upload_to_newapi(account, api_url, api_key)
+            success, message = upload_to_newapi(
+                account,
+                api_url,
+                api_key,
+                channel_type=channel_type,
+                channel_base_url=channel_base_url,
+                channel_models=channel_models,
+            )
             if success:
                 account.newapi_uploaded = True
                 account.newapi_uploaded_at = datetime.utcnow()

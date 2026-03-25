@@ -797,7 +797,14 @@ def _run_sync_registration_task(task_uuid: str, email_service_type: str, proxy: 
                                     if not _svc:
                                         continue
                                     log_callback(f"[NEWAPI] 上传到服务: {_svc.name}")
-                                    _ok, _msg = upload_to_newapi(saved_account, _svc.api_url, _svc.api_key)
+                                    _ok, _msg = upload_to_newapi(
+                                        saved_account,
+                                        _svc.api_url,
+                                        _svc.api_key,
+                                        channel_type=_svc.channel_type,
+                                        channel_base_url=_svc.channel_base_url,
+                                        channel_models=_svc.channel_models,
+                                    )
                                     if _ok:
                                         saved_account.newapi_uploaded = True
                                         saved_account.newapi_uploaded_at = datetime.utcnow()

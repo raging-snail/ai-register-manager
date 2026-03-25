@@ -16,6 +16,9 @@ class NewapiServiceCreate(BaseModel):
     name: str
     api_url: str
     api_key: str
+    channel_type: int = 57
+    channel_base_url: str = ""
+    channel_models: str = "gpt-5.4,gpt-5,gpt-5-codex,gpt-5-codex-mini,gpt-5.1,gpt-5.1-codex,gpt-5.1-codex-max,gpt-5.1-codex-mini,gpt-5.2,gpt-5.2-codex,gpt-5.3-codex,gpt-5-openai-compact,gpt-5-codex-openai-compact,gpt-5-codex-mini-openai-compact,gpt-5.1-openai-compact,gpt-5.1-codex-openai-compact,gpt-5.1-codex-max-openai-compact,gpt-5.1-codex-mini-openai-compact,gpt-5.2-openai-compact,gpt-5.2-codex-openai-compact,gpt-5.3-codex-openai-compact"
     enabled: bool = True
     priority: int = 0
 
@@ -24,6 +27,9 @@ class NewapiServiceUpdate(BaseModel):
     name: Optional[str] = None
     api_url: Optional[str] = None
     api_key: Optional[str] = None
+    channel_type: Optional[int] = None
+    channel_base_url: Optional[str] = None
+    channel_models: Optional[str] = None
     enabled: Optional[bool] = None
     priority: Optional[int] = None
 
@@ -33,6 +39,9 @@ class NewapiServiceResponse(BaseModel):
     name: str
     api_url: str
     has_key: bool
+    channel_type: int = 57
+    channel_base_url: str = ""
+    channel_models: str = ""
     enabled: bool
     priority: int
     created_at: Optional[str] = None
@@ -48,6 +57,9 @@ def _to_response(svc) -> NewapiServiceResponse:
         name=svc.name,
         api_url=svc.api_url,
         has_key=bool(svc.api_key),
+        channel_type=svc.channel_type if svc.channel_type is not None else 57,
+        channel_base_url=svc.channel_base_url or "",
+        channel_models=svc.channel_models or "",
         enabled=svc.enabled,
         priority=svc.priority,
         created_at=svc.created_at.isoformat() if svc.created_at else None,
@@ -70,6 +82,9 @@ async def create_newapi_service(request: NewapiServiceCreate):
             name=request.name,
             api_url=request.api_url,
             api_key=request.api_key,
+            channel_type=request.channel_type,
+            channel_base_url=request.channel_base_url,
+            channel_models=request.channel_models,
             enabled=request.enabled,
             priority=request.priority,
         )
@@ -103,6 +118,12 @@ async def update_newapi_service(service_id: int, request: NewapiServiceUpdate):
             update_data["enabled"] = request.enabled
         if request.priority is not None:
             update_data["priority"] = request.priority
+        if request.channel_type is not None:
+            update_data["channel_type"] = request.channel_type
+        if request.channel_base_url is not None:
+            update_data["channel_base_url"] = request.channel_base_url
+        if request.channel_models is not None:
+            update_data["channel_models"] = request.channel_models
 
         svc = crud.update_newapi_service(db, service_id, **update_data)
         return _to_response(svc)

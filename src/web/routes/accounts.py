@@ -1014,7 +1014,14 @@ async def batch_upload_accounts_to_newapi(request: BatchUploadNewapiRequest):
             request.status_filter, request.email_service_filter, request.search_filter
         )
 
-    results = batch_upload_to_newapi(ids, api_url, api_key)
+    results = batch_upload_to_newapi(
+        ids,
+        api_url,
+        api_key,
+        channel_type=svc.channel_type,
+        channel_base_url=svc.channel_base_url,
+        channel_models=svc.channel_models,
+    )
     return results
 
 
@@ -1035,7 +1042,14 @@ async def upload_account_to_newapi(account_id: int, request: Optional[UploadNewa
         account = crud.get_account_by_id(db, account_id)
         if not account:
             raise HTTPException(status_code=404, detail="账号不存在")
-        success, message = upload_to_newapi(account, svc.api_url, svc.api_key)
+        success, message = upload_to_newapi(
+            account,
+            svc.api_url,
+            svc.api_key,
+            channel_type=svc.channel_type,
+            channel_base_url=svc.channel_base_url,
+            channel_models=svc.channel_models,
+        )
         if success:
             account.newapi_uploaded = True
             account.newapi_uploaded_at = datetime.utcnow()
