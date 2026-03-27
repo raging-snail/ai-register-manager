@@ -66,7 +66,7 @@ def generate_payment_link(request: GenerateLinkRequest):
         if not account:
             raise HTTPException(status_code=404, detail="账号不存在")
 
-        proxy = request.proxy or get_settings().proxy_url
+        proxy = request.proxy or get_settings().get_proxy_url(db=db)
 
         try:
             if request.plan_type == "plus":
@@ -125,11 +125,10 @@ def open_browser_incognito(request: OpenIncognitoRequest):
 @router.post("/accounts/batch-check-subscription")
 def batch_check_subscription(request: BatchCheckSubscriptionRequest):
     """批量检测账号订阅状态"""
-    proxy = request.proxy or get_settings().proxy_url
-
     results = {"success_count": 0, "failed_count": 0, "details": []}
 
     with get_db() as db:
+        proxy = request.proxy or get_settings().get_proxy_url(db=db)
         ids = resolve_account_ids(
             db, request.ids, request.select_all,
             request.status_filter, request.email_service_filter, request.search_filter
